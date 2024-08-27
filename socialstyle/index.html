@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="Git_and_Web/favicon.ico"/>
+    <link rel="stylesheet" href="style.css">
+    <title>socialstyle</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.js"></script>
+    <script>
+        let myLineChart;
+
+        function initializeChart() {
+            const ctx = document.getElementById("myChart").getContext('2d');
+            myLineChart = new Chart(ctx, {
+                plugins: {
+                    beforeDraw: function (chart) {
+                        const ctx = chart.ctx;
+                        const chartArea = chart.chartArea;
+                        const midX = (chartArea.left + chartArea.right) / 2;
+                        const midY = (chartArea.top + chartArea.bottom) / 2;
+                        ctx.save();
+                        // 第一象限
+                        ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
+                        ctx.fillRect(midX, chartArea.top, chartArea.right - midX, midY - chartArea.top);
+                        // 第二象限
+                        ctx.fillStyle = 'rgba(0, 0, 255, 0.2)';
+                        ctx.fillRect(chartArea.left, chartArea.top, midX - chartArea.left, midY - chartArea.top);
+                        // 第三象限
+                        ctx.fillStyle = 'rgba(0, 255, 0, 0.2)';
+                        ctx.fillRect(chartArea.left, midY, midX - chartArea.left, chartArea.bottom - midY);
+                        // 第四象限
+                        ctx.fillStyle = 'rgba(255, 255, 0, 0.2)';
+                        ctx.fillRect(midX, midY, chartArea.right - midX, chartArea.bottom - midY);
+                        ctx.restore();
+                    }
+                },
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'あなた',
+                        data: [{
+                            x: 0,
+                            y: 0,
+                        }],
+                        backgroundColor: 'RGBA(255,100,0, 1)',
+                        pointRadius: 15,
+                    }]
+                },
+                options: {
+                    title: {
+                        display: false,
+                        text: '診断結果'
+                    },
+                    legend: {
+                        display: false
+                    },
+                    scales: {
+                        x: {
+                            scaleLabel: {
+                                display: false,
+                                labelString: 'コミュニケーション'
+                            },
+                            position: 'top'
+                        },
+                        xAxes: [{
+                            type: 'linear',
+                            zeroLineTick: 0,
+                            ticks: {
+                                display: false,
+                                min: -10,
+                                max: 10,
+                                stepSize: 3,
+                            },
+                            gridLines: {
+                                drawTicks:false,
+                                zeroLineColor: '#aaaaaa',
+                                zeroLineWidth:5
+                            }
+                        }],
+                        y: {
+                            scaleLabel: {
+                                display: false,
+                                labelString: '感情表現'
+                            },
+                            position: 'left',
+                            lineWidth:2
+                        },
+                        yAxes: [{
+                            zeroLineTick: 0,
+                            ticks: {
+                                display: false,
+                                min: -10,
+                                max: 10,
+                                stepSize: 3
+                            },
+                            gridLines: {
+                                drawTicks:false,
+                                zeroLineColor: '#aaaaaa',
+                                zeroLineWidth:5
+                            },
+                        }]
+                    },
+                }
+            });
+        }
+
+
+        function calculateResults() {
+            // Initialize counters
+            let aCount = 0;
+            let bCount = 0;
+            let cCount = 0;
+            let dCount = 0;
+
+            // Count A and B selections
+            for (let i = 1; i <= 9; i++) {
+                const selected = document.querySelector(`input[name="q${i}"]:checked`);
+                if (selected) {
+                    if (selected.value === 'A') {
+                        aCount++;
+                    } else if (selected.value === 'B') {
+                        bCount++;
+                    }
+                }
+            }
+
+            // Count C and D selections
+            for (let i = 10; i <= 18; i++) {
+                const selected = document.querySelector(`input[name="q${i}"]:checked`);
+                if (selected) {
+                    if (selected.value === 'C') {
+                        cCount++;
+                    } else if (selected.value === 'D') {
+                        dCount++;
+                    }
+                }
+            }
+
+            // Calculate assertiveness and emotional expression
+            const assertiveness = aCount - bCount;
+            const emotionalExpression = dCount - cCount;
+            var CommunicationType;
+            var explanation1;
+            var explanation2;
+            var gazo;
+            if (assertiveness >= 0) {
+                if (emotionalExpression >= 0) {
+                    CommunicationType = "ドライバー";
+                    explanation1 = "意見を主張、感情を抑える";
+                    explanation2 = "合理的に仕事を進める目標達成型。感情表現は弱く、合理的に物事を達成していくスタイル。口数が少ない人が多い。行動が早く負けず嫌い。プロセスよりも結果を重視するので手段は問わない傾向あり。";
+                    gazo = "PNG/01_Driver.png"
+                }
+                else {
+                    CommunicationType = "エクスプレッシブ";
+                    explanation1 = "意見を主張、感情を出す";
+                    explanation2 = "みんなから注目されることを好むスタイル。明るくて表情も豊か。友人が多い。ノリが良く、新しいことやトレンドに敏感で積極的に何かにチャレンジしている。";
+                    gazo = "PNG/02_Expressive.png"
+                }
+            }
+            else {
+                if (emotionalExpression >= 0) {
+                    CommunicationType = "アナリティカル";
+                    explanation1 = "意見を聴く、感情を抑える";
+                    explanation2 = "観察を好む分析型。データを重視して、分析する。知識人の理論を良く知っている。感情は表情に表れず、話すよりも聞くことが多い。独特の見解がある人が多い。";
+                    gazo = "PNG/03_Analytical.png"
+                }
+                else {
+                    CommunicationType = "エミアブル";
+                    explanation1 = "意見を聴く、感情を出す";
+                    explanation2 = "みんなの気持ちをくみ取れる調停役。話すよりも聞くスタイル。周囲の気持ちに敏感で、自分が注目されるよりも全体の調和を重視する。感情は表情に表れる。明るくて、いわば“いい人”。";
+                    gazo = "PNG/04_Amiable.png"
+                }
+            }
+
+            // Display results
+            document.getElementById('results1').innerText = `あなたは「${CommunicationType}」`;
+            document.getElementById('results2').innerText = `「${explanation1}」なタイプ`;
+            document.getElementById('results3').innerText = `${explanation2}`;
+            document.getElementById('results4').src = gazo;
+
+            // Update chart data
+            myLineChart.data.datasets[0].data[0] = {
+                x: assertiveness,
+                y: emotionalExpression
+            };
+            myLineChart.update();
+        }
+
+        // Initialize chart on page load
+        window.onload = function () {
+            initializeChart();
+        }
+    </script>
+</head>
+
+<body>
+    <!-- <a href="http://127.0.0.1:5500/WEB/index.html">indexページに戻る</a> -->
+    <div align="center">
+        <h1 class="nomaltext">ソーシャルスタイル診断</h1>
+        <table id="diagnosis" border="1" width="90%">
+            <tr>
+                <th>問い</th>
+                <th>A</th>
+                <th>B</th>
+            </tr>
+            <tr>
+                <td>話すペースが</td>
+                <td><input type="radio" value="A" name="q1" class="question" id="q1a"><label for="q1a">A: 早い</label>
+                </td>
+                <td><input type="radio" value="B" name="q1" class="question" id="q1b"><label for="q1b">B: ゆっくり</label>
+                </td>
+            </tr>
+            <tr>
+                <td>話すとき間を</td>
+                <td><input type="radio" value="A" name="q2" class="question" id="q2a"><label for="q2a">A: とらない</label>
+                </td>
+                <td><input type="radio" value="B" name="q2" class="question" id="q2b"><label for="q2b">B: とる</label>
+                </td>
+            </tr>
+            <tr>
+                <td>話すとき語尾が</td>
+                <td><input type="radio" value="A" name="q3" class="question" id="q3a"><label for="q3a">A: きつい</label>
+                </td>
+                <td><input type="radio" value="B" name="q3" class="question" id="q3b"><label for="q3b">B: ソフト</label>
+                </td>
+            </tr>
+            <tr>
+                <td>話すとき声が</td>
+                <td><input type="radio" value="A" name="q4" class="question" id="q4a"><label for="q4a">A: 大きい</label>
+                </td>
+                <td><input type="radio" value="B" name="q4" class="question" id="q4b"><label for="q4b">B: 小さい</label>
+                </td>
+            </tr>
+            <tr>
+                <td>話すとき</td>
+                <td><input type="radio" value="A" name="q5" class="question" id="q5a"><label for="q5a">A: 自分から話す</label>
+                </td>
+                <td><input type="radio" value="B" name="q5" class="question" id="q5b"><label for="q5b">B:
+                        聞かれると話す</label></td>
+            </tr>
+            <tr>
+                <td>話すとき</td>
+                <td><input type="radio" value="A" name="q6" class="question" id="q6a"><label for="q6a">A: 結論から話す</label>
+                </td>
+                <td><input type="radio" value="B" name="q6" class="question" id="q6b"><label for="q6b">B:
+                        順を追って話す</label></td>
+            </tr>
+            <tr>
+                <td>話すとき</td>
+                <td><input type="radio" value="A" name="q7" class="question" id="q7a"><label for="q7a">A:
+                        まず自分の意見を言う</label></td>
+                <td><input type="radio" value="B" name="q7" class="question" id="q7b"><label for="q7b">B:
+                        まず相手の意見を聞く</label></td>
+            </tr>
+            <tr>
+                <td>話すとき</td>
+                <td><input type="radio" value="A" name="q8" class="question" id="q8a"><label for="q8a">A:
+                        視線を合わせる</label></td>
+                <td><input type="radio" value="B" name="q8" class="question" id="q8b"><label for="q8b">B:
+                        視線を合わせない</label></td>
+            </tr>
+            <tr>
+                <td>話すとき</td>
+                <td><input type="radio" value="A" name="q9" class="question" id="q9a"><label for="q9a">A: 質問に即答</label>
+                </td>
+                <td><input type="radio" value="B" name="q9" class="question" id="q9b"><label for="q9b">B: 質問は熟考</label>
+                </td>
+            </tr>
+        </table>
+        <table id="diagnosis2" border="1" width="90%">
+            <tr>
+                <th>質問項目</th>
+                <th>C</th>
+                <th>D</th>
+            </tr>
+            <tr>
+                <td>表情が</td>
+                <td><input type="radio" value="C" name="q10" class="question" id="q10c"><label for="q10c">C: 豊か</label>
+                </td>
+                <td><input type="radio" value="D" name="q10" class="question" id="q10d"><label for="q10d">D:
+                        ポーカーフェイス</label></td>
+            </tr>
+            <tr>
+                <td>声に</td>
+                <td><input type="radio" value="C" name="q11" class="question" id="q11c"><label for="q11c">C:
+                        抑揚がある</label></td>
+                <td><input type="radio" value="D" name="q11" class="question" id="q11d"><label for="q11d">D:
+                        抑揚がない</label></td>
+            </tr>
+            <tr>
+                <td>身振り手振りを</td>
+                <td><input type="radio" value="C" name="q12" class="question" id="q12c"><label for="q12c">C:
+                        交えて話す</label></td>
+                <td><input type="radio" value="D" name="q12" class="question" id="q12d"><label for="q12d">D:
+                        あまり交えない</label></td>
+            </tr>
+            <tr>
+                <td>雰囲気は</td>
+                <td><input type="radio" value="C" name="q13" class="question" id="q13c"><label for="q13c">C:
+                        フレンドリーである</label></td>
+                <td><input type="radio" value="D" name="q13" class="question" id="q13d"><label for="q13d">D:
+                        ビジネスライクである</label></td>
+            </tr>
+            <tr>
+                <td>使う言葉は</td>
+                <td><input type="radio" value="C" name="q14" class="question" id="q14c"><label for="q14c">C:
+                        平易なものが多い</label></td>
+                <td><input type="radio" value="D" name="q14" class="question" id="q14d"><label for="q14d">D:
+                        難しいものが多い</label></td>
+            </tr>
+            <tr>
+                <td>話の始めは</td>
+                <td><input type="radio" value="C" name="q15" class="question" id="q15c"><label for="q15c">C:
+                        たとえ話やエピソード</label></td>
+                <td><input type="radio" value="D" name="q15" class="question" id="q15d"><label for="q15d">D:
+                        情報やデータ数値</label></td>
+            </tr>
+            <tr>
+                <td>はじめは</td>
+                <td><input type="radio" value="C" name="q16" class="question" id="q16c"><label for="q16c">C:
+                        まずは人間関係を作る</label></td>
+                <td><input type="radio" value="D" name="q16" class="question" id="q16d"><label for="q16d">D:
+                        すぐに仕事を進める</label></td>
+            </tr>
+            <tr>
+                <td>仕事のしかたは</td>
+                <td><input type="radio" value="C" name="q17" class="question" id="q17c"><label for="q17c">C:
+                        仲間と一緒に進めていく</label></td>
+                <td><input type="radio" value="D" name="q17" class="question" id="q17d"><label for="q17d">D:
+                        一人で黙々と進める</label></td>
+            </tr>
+            <tr>
+                <td>気持ちは</td>
+                <td><input type="radio" value="C" name="q18" class="question" id="q18c"><label for="q18c">C:
+                        顔に出やすい</label></td>
+                <td><input type="radio" value="D" name="q18" class="question" id="q18d"><label for="q18d">D:
+                        顔には出ない</label></td>
+            </tr>
+        </table>
+        <br>
+        <button onclick="calculateResults()"><span>結果を計算する</span></button>
+        <h2 class="nomaltext">診断結果</h2>
+        <h3 id="results1" class="nomaltext"></h3>
+        <img id="results4" width="30%" >
+        <b>
+            <p id="results2" class="nomaltext"></p>
+        </b>
+        <p id="results3" class="explanation" align="left"></p>
+        <canvas id="myChart" width="70%" height="50%"></canvas>
+        <p>引用元<br><q><a
+                    href="https://www.wowcom.co.jp/blog/contactcenter/what-is-social-style-theory/">ソーシャルスタイル理論とは？相手の心をつかむコミュニケーション</a>_株式会社WOWOWコミュニケーションズ</q>
+        </p>
+    </div>
+</body>
+
+</html>
